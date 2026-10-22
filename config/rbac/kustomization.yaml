@@ -1,6 +1,8 @@
 resources:
 - service_account.yaml
 - role.yaml
+- prometheus_rule_role.yaml
+- prometheus_rule_role_binding.yaml
 - role_binding.yaml
 - metrics_reader_role.yaml
 - trainer_admin_role.yaml
