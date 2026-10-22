@@ -201,6 +201,7 @@ rules:
   - monitoring.coreos.com
   resources:
   - podmonitors
+  - prometheusrules
   - servicemonitors
   verbs:
   - create
@@ -210,21 +211,6 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - prometheusrules
-  verbs:
-  - list
-- apiGroups:
-  - monitoring.coreos.com
-  resourceNames:
-  - kubeflow-trainer-telemetry
-  resources:
-  - prometheusrules
-  verbs:
-  - delete
-  - patch
 - apiGroups:
   - networking.k8s.io
   resources:
