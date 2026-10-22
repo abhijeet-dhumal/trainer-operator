@@ -156,6 +156,10 @@ type trainerActions struct {
 // +kubebuilder:rbac:groups=authorization.k8s.io,resources=subjectaccessreviews,verbs=create
 // +kubebuilder:rbac:urls=/metrics,verbs=get
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=podmonitors;servicemonitors,verbs=get;list;watch;create;update;patch;delete
+// GC's label-selector list cannot be restricted by resourceNames.
+// The ClusterRoleBinding is cluster-wide; resourceNames limits patch/delete by name across namespaces.
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=list
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=prometheusrules,verbs=patch;delete,resourceNames=kubeflow-trainer-telemetry
 // +kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:groups=jobset.x-k8s.io,resources=jobsets,verbs=create;delete;get;list;patch;update;watch
