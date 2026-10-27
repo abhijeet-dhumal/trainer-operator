@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -164,6 +165,25 @@ func TestResolveNamespace(t *testing.T) {
 
 	trainer = &componentsv1alpha1.Trainer{}
 	g.Expect(resolveNamespace(trainer)).To(Equal(defaultNamespace))
+}
+
+func TestRenderOperatorTelemetryRule(t *testing.T) {
+	g := NewWithT(t)
+	m := newTestActions()
+	m.workDir = t.TempDir()
+
+	resources, err := m.renderResourceSet(resourceSet{
+		name:         telemetryResourceSet,
+		subDir:       telemetryResourceSet,
+		templatePath: filepath.Join("..", "..", "manifests", "operator"),
+		namespace:    testTrainerNamespace,
+		overlay:      defaultOverlay,
+	})
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(resources).To(HaveLen(1))
+	g.Expect(resources[0].GetKind()).To(Equal("PrometheusRule"))
+	g.Expect(resources[0].GetName()).To(Equal("kubeflow-trainer-telemetry"))
+	g.Expect(resources[0].GetNamespace()).To(Equal(testTrainerNamespace))
 }
 
 func TestCleanupTrainerResourcesDeletesLabeledResources(t *testing.T) {
