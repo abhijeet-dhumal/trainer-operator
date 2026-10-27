@@ -2,8 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: kubeflow-trainer-telemetry
-  labels:
-    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+  namespace: trainer-operator-system
 spec:
   groups:
     - name: rhoai.trainer.telemetry

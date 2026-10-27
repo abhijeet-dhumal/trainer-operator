@@ -62,10 +62,9 @@ import (
 const (
 	TrainerInstanceName = "default-trainer"
 
-	trainerPartOf        = "trainer"
-	defaultNamespace     = "opendatahub"
-	finalizerName        = "components.platform.opendatahub.io/trainer-cleanup"
-	telemetryResourceSet = "telemetry"
+	trainerPartOf    = "trainer"
+	defaultNamespace = "opendatahub"
+	finalizerName    = "components.platform.opendatahub.io/trainer-cleanup"
 
 	degradedCondition = fwapi.ConditionTypeDegraded
 
@@ -367,14 +366,6 @@ func (m *trainerActions) renderManifests(ctx context.Context, rr *types.Reconcil
 			filterConfigMaps: true,
 		},
 	}
-
-	resourceSets = append(resourceSets, resourceSet{
-		name:         telemetryResourceSet,
-		subDir:       telemetryResourceSet,
-		templatePath: filepath.Join(m.manifestsPath, "operator"),
-		namespace:    namespace,
-		overlay:      defaultOverlay,
-	})
 
 	if clusterType == cluster.ClusterTypeOpenShift {
 		resourceSets = append(resourceSets, resourceSet{

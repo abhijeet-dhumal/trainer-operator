@@ -224,29 +224,6 @@ resources:
 		return "", err
 	}
 
-	telemetryDir := filepath.Join(dir, "operator", defaultOverlay)
-	if err := os.MkdirAll(telemetryDir, 0o755); err != nil {
-		return "", err
-	}
-	telemetryRule := `apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: kubeflow-trainer-telemetry
-  labels:
-    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
-`
-	if err := os.WriteFile(filepath.Join(telemetryDir, "prometheus-rule.yaml"), []byte(telemetryRule), 0o644); err != nil {
-		return "", err
-	}
-	telemetryKustomization := `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- prometheus-rule.yaml
-`
-	if err := os.WriteFile(filepath.Join(telemetryDir, "kustomization.yaml"), []byte(telemetryKustomization), 0o644); err != nil {
-		return "", err
-	}
-
 	componentMetadata := `releases:
   - name: Kubeflow Trainer
     version: "2.1.0"
@@ -315,14 +292,6 @@ odh-th06-cpu-torch210-py312-image=quay.io/test/cpu:latest
 func createTestImageStreams() (string, error) {
 	dir, err := os.MkdirTemp("", "trainer-imagestreams-*")
 	if err != nil {
-		return "", err
-	}
-
-	kustomization := `apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources: []
-`
-	if err := os.WriteFile(filepath.Join(dir, "kustomization.yaml"), []byte(kustomization), 0o644); err != nil {
 		return "", err
 	}
 

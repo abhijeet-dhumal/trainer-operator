@@ -23,7 +23,6 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:9.8
 WORKDIR /
 COPY --from=builder /workspace/manager .
 COPY manifests/trainer/ /opt/manifests-template/
-COPY manifests/operator/ /opt/manifests-template/operator/
 COPY manifests/runtimes/ /opt/runtimes-template/
 COPY manifests/imagestreams/ /opt/imagestreams-template/
 USER 65532:65532
