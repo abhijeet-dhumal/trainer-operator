@@ -368,14 +368,16 @@ func (m *trainerActions) renderManifests(ctx context.Context, rr *types.Reconcil
 		},
 	}
 
+	resourceSets = append(resourceSets, resourceSet{
+		name:         telemetryResourceSet,
+		subDir:       telemetryResourceSet,
+		templatePath: filepath.Join(m.manifestsPath, "operator"),
+		namespace:    namespace,
+		overlay:      defaultOverlay,
+	})
+
 	if clusterType == cluster.ClusterTypeOpenShift {
 		resourceSets = append(resourceSets, resourceSet{
-			name:         telemetryResourceSet,
-			subDir:       telemetryResourceSet,
-			templatePath: filepath.Join(m.manifestsPath, "operator"),
-			namespace:    namespace,
-			overlay:      defaultOverlay,
-		}, resourceSet{
 			name:             "imagestreams",
 			subDir:           "imagestreams",
 			templatePath:     m.imageStreamsPath,

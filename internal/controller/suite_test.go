@@ -232,6 +232,8 @@ resources:
 kind: PrometheusRule
 metadata:
   name: kubeflow-trainer-telemetry
+  labels:
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
 `
 	if err := os.WriteFile(filepath.Join(telemetryDir, "prometheus-rule.yaml"), []byte(telemetryRule), 0o644); err != nil {
 		return "", err

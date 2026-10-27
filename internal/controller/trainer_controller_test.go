@@ -172,11 +172,10 @@ func TestRenderManifestsTelemetryRule(t *testing.T) {
 	clusterVersionGVK := schema.GroupVersionKind{Group: "config.openshift.io", Version: "v1", Kind: "ClusterVersion"}
 
 	for _, testCase := range []struct {
-		name              string
-		isOpenShift       bool
-		wantTelemetryRule bool
+		name        string
+		isOpenShift bool
 	}{
-		{name: "OpenShift", isOpenShift: true, wantTelemetryRule: true},
+		{name: "OpenShift", isOpenShift: true},
 		{name: "Kubernetes"},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -208,13 +207,11 @@ func TestRenderManifestsTelemetryRule(t *testing.T) {
 					telemetryRules = append(telemetryRules, resource)
 				}
 			}
-			if testCase.wantTelemetryRule {
-				g.Expect(telemetryRules).To(HaveLen(1))
-				g.Expect(telemetryRules[0].GetName()).To(Equal("kubeflow-trainer-telemetry"))
-				g.Expect(telemetryRules[0].GetNamespace()).To(Equal(testTrainerNamespace))
-			} else {
-				g.Expect(telemetryRules).To(BeEmpty())
-			}
+			g.Expect(telemetryRules).To(HaveLen(1))
+			g.Expect(telemetryRules[0].GetName()).To(Equal("kubeflow-trainer-telemetry"))
+			g.Expect(telemetryRules[0].GetNamespace()).To(Equal(testTrainerNamespace))
+			g.Expect(telemetryRules[0].GetLabels()).To(HaveKeyWithValue(
+				"openshift.io/prometheus-rule-evaluation-scope", "leaf-prometheus"))
 		})
 	}
 }
