@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -29,10 +28,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -167,23 +168,55 @@ func TestResolveNamespace(t *testing.T) {
 	g.Expect(resolveNamespace(trainer)).To(Equal(defaultNamespace))
 }
 
-func TestRenderOperatorTelemetryRule(t *testing.T) {
-	g := NewWithT(t)
-	m := newTestActions()
-	m.workDir = t.TempDir()
+func TestRenderManifestsTelemetryRule(t *testing.T) {
+	clusterVersionGVK := schema.GroupVersionKind{Group: "config.openshift.io", Version: "v1", Kind: "ClusterVersion"}
 
-	resources, err := m.renderResourceSet(resourceSet{
-		name:         telemetryResourceSet,
-		subDir:       telemetryResourceSet,
-		templatePath: filepath.Join("..", "..", "manifests", "operator"),
-		namespace:    testTrainerNamespace,
-		overlay:      defaultOverlay,
-	})
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(resources).To(HaveLen(1))
-	g.Expect(resources[0].GetKind()).To(Equal("PrometheusRule"))
-	g.Expect(resources[0].GetName()).To(Equal("kubeflow-trainer-telemetry"))
-	g.Expect(resources[0].GetNamespace()).To(Equal(testTrainerNamespace))
+	for _, testCase := range []struct {
+		name              string
+		isOpenShift       bool
+		wantTelemetryRule bool
+	}{
+		{name: "OpenShift", isOpenShift: true, wantTelemetryRule: true},
+		{name: "Kubernetes"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			g := NewWithT(t)
+			ctx := context.Background()
+			scheme := runtime.NewScheme()
+			scheme.AddKnownTypeWithName(clusterVersionGVK, &unstructured.Unstructured{})
+			var objects []client.Object
+			if testCase.isOpenShift {
+				clusterVersion := &unstructured.Unstructured{}
+				clusterVersion.SetGroupVersionKind(clusterVersionGVK)
+				clusterVersion.SetName("version")
+				objects = append(objects, clusterVersion)
+			}
+			apiClient := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objects...).Build()
+
+			m := newTestActions()
+			m.workDir = t.TempDir()
+			trainer := &componentsv1alpha1.Trainer{
+				Spec: componentsv1alpha1.TrainerSpec{AppNamespace: testTrainerNamespace},
+			}
+			rr := &fwtypes.ReconciliationRequest{Client: apiClient, Instance: trainer}
+
+			g.Expect(m.renderManifests(ctx, rr)).To(Succeed())
+
+			var telemetryRules []unstructured.Unstructured
+			for _, resource := range rr.Resources {
+				if resource.GetKind() == "PrometheusRule" {
+					telemetryRules = append(telemetryRules, resource)
+				}
+			}
+			if testCase.wantTelemetryRule {
+				g.Expect(telemetryRules).To(HaveLen(1))
+				g.Expect(telemetryRules[0].GetName()).To(Equal("kubeflow-trainer-telemetry"))
+				g.Expect(telemetryRules[0].GetNamespace()).To(Equal(testTrainerNamespace))
+			} else {
+				g.Expect(telemetryRules).To(BeEmpty())
+			}
+		})
+	}
 }
 
 func TestCleanupTrainerResourcesDeletesLabeledResources(t *testing.T) {
